@@ -67,7 +67,7 @@ sysbench.cmdline.options = {
    secondary =
       {"Use a secondary index in place of the PRIMARY KEY", false},
    create_secondary =
-      {"Create a secondary index in addition to the PRIMARY KEY", true},
+      {"Create a secondary index in addition to the PRIMARY KEY [<empty>|before|on/after] loading the data", "after"},
    reconnect =
       {"Reconnect after every N events. The default (0) is to not reconnect",
        0},
@@ -202,6 +202,13 @@ CREATE TABLE sbtest%d(
 
    con:query(query)
 
+   if (sysbench.opt.create_secondary and sysbench.opt.create_secondary == "before") then
+      print(string.format("Creating a secondary index on 'sbtest%d'...",
+                          table_num))
+      con:query(string.format("CREATE INDEX k_%d ON sbtest%d(k)",
+                              table_num, table_num))
+   end
+
    if (sysbench.opt.table_size > 0) then
       print(string.format("Inserting %d records into 'sbtest%d'",
                           sysbench.opt.table_size, table_num))
@@ -239,7 +246,7 @@ CREATE TABLE sbtest%d(
 
    con:bulk_insert_done()
 
-   if sysbench.opt.create_secondary then
+   if (sysbench.opt.create_secondary and sysbench.opt.create_secondary ~= "before") then
       print(string.format("Creating a secondary index on 'sbtest%d'...",
                           table_num))
       con:query(string.format("CREATE INDEX k_%d ON sbtest%d(k)",
